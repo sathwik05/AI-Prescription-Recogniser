@@ -36,7 +36,7 @@ AI-Prescription-Reader/
 ├── app.py                         # Flask app -- routes + glue only
 │
 ├── models/
-│   └── trocr_model/               # fine-tuned TrOCR weights (see below)
+│   └── trocr_model/               # fine-tuned TrOCR weights (see below)to  download full model use this Link https://drive.google.com/drive/folders/1F7ffOINYmz5Yenpi1CLVQyLvM22swCIH?usp=sharing
 │
 ├── data/
 │   ├── sample_inputs/             # a handful of test crops you can try
