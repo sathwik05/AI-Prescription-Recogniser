@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Full-page Results{% endblock %}
+{% block content %}
+<section class="hero compact">
+  <h1>Full-page OCR Results</h1>
+  <p class="lead">Segmented {{ n_boxes }} word-boxes; ran <strong>fine-tuned</strong> and <strong>base</strong> TrOCR on each, then picked the better RxNorm hit.</p>
+  <p class="meta">Segmentation: {{ seg_ms }} ms &middot; OCR: {{ ocr_ms }} ms (both models) &middot; classification threshold: RxNorm score &ge; {{ min_score }}.</p>
+  <p><a class="back" href="{{ url_for('index') }}">&larr; Upload another</a></p>
+</section>
+
+<section class="panel">
+  <h2>Detected words (numbered overlay)</h2>
+  <img class="overlay" src="{{ url_for('static', filename='uploads/' + annotated_name) }}" alt="annotated prescription">
+</section>
+
+{% if medicines %}
+<section class="panel">
+  <h2>Identified medicines ({{ medicines|length }})</h2>
+  <div class="cards">
+    {% for m in medicines %}
+    <article class="card">
+      <img class="thumb" src="{{ url_for('static', filename='uploads/' + m.crop_name) }}" alt="word crop">
+      <div class="card-body">
+        <p class="filename">#{{ m.index }} &middot; best = <strong>{{ m.best_side }}</strong></p>
+        <div class="dual">
+          <div class="dual-col {{ 'winner' if m.best_side == 'fine-tune' else '' }}">
+            <div class="dual-tag">Fine-tune</div>
+            <div class="dual-pred">{{ m.ft_prediction or '—' }}</div>
+            {% if m.ft_match %}
+              <div class="dual-rx">{{ m.ft_match.name }}</div>
+              <div class="dual-score">score {{ '%.2f'|format(m.ft_score) }}</div>
+            {% else %}
+              <div class="dual-rx muted">no match</div>
+            {% endif %}
+          </div>
+          <div class="dual-col {{ 'winner' if m.best_side == 'base' else '' }}">
+            <div class="dual-tag">Base</div>
+            <div class="dual-pred">{{ m.base_prediction or '—' }}</div>
+            {% if m.base_match %}
+              <div class="dual-rx">{{ m.base_match.name }}</div>
+              <div class="dual-score">score {{ '%.2f'|format(m.base_score) }}</div>
+            {% else %}
+              <div class="dual-rx muted">no match</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% else %}
+<section class="panel">
+  <p class="muted">No word-boxes cleared the RxNorm score threshold ({{ min_score }}). Lower the threshold to see everything.</p>
+</section>
+{% endif %}
+
+{% if interactions %}
+<section class="interactions">
+  <h2>Drug Interaction Check</h2>
+  <ul class="interactions-list">
+    {% for it in interactions %}
+    <li class="interaction">
+      {% if it.severity %}<span class="sev">{{ it.severity }}</span>{% endif %}
+      <p>{{ it.description }}</p>
+      {% if it.source %}<span class="source">source: {{ it.source }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% elif medicines|length >= 2 %}
+<section class="interactions">
+  <h2>Drug Interaction Check</h2>
+  <p class="muted">No known interactions returned by RxNorm for the detected medicines.</p>
+</section>
+{% endif %}
+
+<section class="panel">
+  <h2>All detections ({{ words|length }})</h2>
+  <div class="table-wrap">
+    <table class="results dual-table">
+      <thead>
+        <tr>
+          <th rowspan="2">#</th><th rowspan="2">Crop</th>
+          <th colspan="3">Fine-tune</th>
+          <th colspan="3">Base</th>
+          <th rowspan="2">Best</th>
+          <th rowspan="2">Classified</th>
+        </tr>
+        <tr>
+          <th>Pred</th><th>RxNorm</th><th>Score</th>
+          <th>Pred</th><th>RxNorm</th><th>Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for w in words %}
+        <tr class="{{ 'ok' if w.is_medicine else 'bad' }}">
+          <td class="mono">{{ w.index }}</td>
+          <td><img class="crop-thumb" src="{{ url_for('static', filename='uploads/' + w.crop_name) }}" alt="crop"></td>
+          <td class="{{ 'winner-cell' if w.best_side == 'fine-tune' else '' }}">{{ w.ft_prediction }}</td>
+          <td>{% if w.ft_match %}{{ w.ft_match.name }}{% else %}&mdash;{% endif %}</td>
+          <td class="mono">{{ '%.2f'|format(w.ft_score) }}</td>
+          <td class="{{ 'winner-cell' if w.best_side == 'base' else '' }}">{{ w.base_prediction }}</td>
+          <td>{% if w.base_match %}{{ w.base_match.name }}{% else %}&mdash;{% endif %}</td>
+          <td class="mono">{{ '%.2f'|format(w.base_score) }}</td>
+          <td>{{ w.best_side }}</td>
+          <td>{{ 'medicine' if w.is_medicine else 'noise' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

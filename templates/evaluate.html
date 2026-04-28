@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Evaluate{% endblock %}
+{% block content %}
+<section class="hero compact">
+  <h1>Accuracy Evaluation</h1>
+  <p class="lead">Run the saved model on a sample from the held-out test split and report exact-match and CER.</p>
+</section>
+
+{% if not has_dataset %}
+  <section class="panel">
+    <p class="err">
+      Could not find the test split. Expected a <code>Testing/</code> folder with
+      <code>*_labels.csv</code> + <code>testing_words/</code> under <code>dataset/</code>.
+    </p>
+  </section>
+{% else %}
+  <section class="panel">
+    <form method="POST">
+      <label for="sample_size">Sample size (1&ndash;{{ total_available }}):</label>
+      <input id="sample_size" type="number" name="sample_size" value="20" min="1" max="{{ total_available }}">
+      <button class="primary" type="submit">Run Evaluation</button>
+      <div class="hint">CPU inference is slow &mdash; start with 20&ndash;50 samples. Sample is fixed (seed 42) so runs are comparable.</div>
+    </form>
+  </section>
+{% endif %}
+
+{% if ran %}
+<section class="summary">
+  <h2>Summary</h2>
+  <div class="stats">
+    <div class="stat"><div class="stat-value">{{ summary.n }}</div><div class="stat-label">Samples</div></div>
+    <div class="stat"><div class="stat-value">{{ '%.2f'|format(summary.exact_match_pct) }}%</div><div class="stat-label">Exact match</div></div>
+    <div class="stat"><div class="stat-value">{{ '%.3f'|format(summary.avg_cer) }}</div><div class="stat-label">Avg CER</div></div>
+    <div class="stat"><div class="stat-value">{{ summary.elapsed_sec }}s</div><div class="stat-label">Total time</div></div>
+  </div>
+</section>
+
+<section class="details">
+  <h2>Per-sample results</h2>
+  <div class="table-wrap">
+    <table class="results">
+      <thead>
+        <tr><th>Image</th><th>Ground truth</th><th>Prediction</th><th>Match</th><th>CER</th></tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr class="{{ 'ok' if r.exact else 'bad' }}">
+          <td class="mono">{{ r.image }}</td>
+          <td>{{ r.ground_truth }}</td>
+          <td>{{ r.prediction }}</td>
+          <td>{{ 'yes' if r.exact else 'no' }}</td>
+          <td class="mono">{{ r.cer }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

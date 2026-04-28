@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prescription OCR — {% block title %}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <div class="brand">Prescription&nbsp;OCR</div>
+    <nav>
+      <a href="{{ url_for('index') }}">Upload</a>
+      <a href="{{ url_for('evaluate_route') }}">Evaluate</a>
+    </nav>
+  </header>
+
+  <main>
+    {% with msgs = get_flashed_messages() %}
+      {% if msgs %}
+        <ul class="flash">
+          {% for m in msgs %}<li>{{ m }}</li>{% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <span>TrOCR fine-tune · RxNorm REST · Flask</span>
+  </footer>
+</body>
+</html>

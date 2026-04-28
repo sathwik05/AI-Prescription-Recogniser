@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Upload{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Read doctor's handwritten prescriptions</h1>
+  <p class="lead">
+    The fine-tuned TrOCR model was trained on single-word crops. Use the first
+    form for pre-cropped medicine names, or the second form to upload a full
+    prescription page &mdash; the app will segment it into words first.
+  </p>
+  <p class="meta">
+    <strong>Model:</strong> <code>{{ model_source }}</code>
+    &middot; <strong>Source:</strong> {{ model_kind }}
+    &middot; <strong>Device:</strong> <code>{{ device }}</code>
+  </p>
+</section>
+
+<section class="panel">
+  <h2>Word-crop mode</h2>
+  <p class="hint" style="margin-top:-6px">Upload one or more tight crops of single medicine names. 2+ enables interaction check.</p>
+  <form method="POST" action="{{ url_for('predict_route') }}" enctype="multipart/form-data">
+    <label class="file-label" for="images">
+      <span class="file-cta">Choose word-crop image(s)</span>
+      <input id="images" type="file" name="images" accept="image/*" multiple required>
+    </label>
+    <button class="primary" type="submit">Extract Text</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>Full-page mode</h2>
+  <p class="hint" style="margin-top:-6px">Upload a whole prescription. Words are auto-detected via OpenCV, then each is run through TrOCR.</p>
+  <form method="POST" action="{{ url_for('predict_page_route') }}" enctype="multipart/form-data">
+    <label class="file-label" for="page_image">
+      <span class="file-cta">Choose prescription page</span>
+      <input id="page_image" type="file" name="image" accept="image/*" required>
+    </label>
+    <label for="min_score">RxNorm score threshold (filter non-medicines):</label>
+    <input id="min_score" type="number" name="min_score" value="4" min="0" max="20" step="0.5">
+    <div class="hint">Scores above ~4 usually correspond to real drug matches; everything below is shown but flagged as noise.</div>
+    <button class="primary" type="submit">Segment &amp; Extract</button>
+  </form>
+</section>
+{% endblock %}

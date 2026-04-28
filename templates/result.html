@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Results{% endblock %}
+{% block content %}
+<section class="hero compact">
+  <h1>OCR Results</h1>
+  <p class="lead">Fine-tuned and base TrOCR predictions side by side. Best RxNorm match wins.</p>
+  <p><a class="back" href="{{ url_for('index') }}">&larr; Upload another</a></p>
+</section>
+
+<div class="cards">
+  {% for r in results %}
+  <article class="card">
+    {% if r.filename %}
+      <img class="thumb" src="{{ url_for('static', filename='uploads/' + r.filename) }}" alt="prescription">
+    {% endif %}
+    <div class="card-body">
+      <p class="filename">{{ r.original }}</p>
+      {% if r.error %}
+        <p class="err">Error: {{ r.error }}</p>
+      {% else %}
+        <div class="dual">
+          <div class="dual-col {{ 'winner' if r.best_side == 'fine-tune' else '' }}">
+            <div class="dual-tag">Fine-tune</div>
+            <div class="dual-pred">{{ r.ft_prediction or '—' }}</div>
+            {% if r.ft_match %}
+              <div class="dual-rx">{{ r.ft_match.name }} <span class="muted">({{ r.ft_match.rxcui }})</span></div>
+              <div class="dual-score">score {{ '%.2f'|format(r.ft_score) }}</div>
+            {% else %}
+              <div class="dual-rx muted">no RxNorm match</div>
+            {% endif %}
+            <div class="dual-ms">{{ r.ft_ms }} ms</div>
+          </div>
+          <div class="dual-col {{ 'winner' if r.best_side == 'base' else '' }}">
+            <div class="dual-tag">Base</div>
+            <div class="dual-pred">{{ r.base_prediction or '—' }}</div>
+            {% if r.base_match %}
+              <div class="dual-rx">{{ r.base_match.name }} <span class="muted">({{ r.base_match.rxcui }})</span></div>
+              <div class="dual-score">score {{ '%.2f'|format(r.base_score) }}</div>
+            {% else %}
+              <div class="dual-rx muted">no RxNorm match</div>
+            {% endif %}
+            <div class="dual-ms">{{ r.base_ms }} ms</div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+{% if checked_interactions %}
+<section class="interactions">
+  <h2>Drug Interaction Check (on best match per image)</h2>
+  {% if interactions %}
+    <ul class="interactions-list">
+      {% for it in interactions %}
+      <li class="interaction">
+        {% if it.severity %}<span class="sev">{{ it.severity }}</span>{% endif %}
+        <p>{{ it.description }}</p>
+        {% if it.source %}<span class="source">source: {{ it.source }}</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">No known interactions between the matched drugs.</p>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,13 @@
+# NOTE: torch is NOT pinned here on purpose -- the right wheel depends on
+# whether you want CPU or CUDA. Install it before this file:
+#   pip install --index-url https://download.pytorch.org/whl/cpu torch
+# (see README.md for GPU instructions).
+
+flask>=3.0
+pillow>=10.0
+requests>=2.31
+pandas>=2.1
+transformers>=4.40
+torch>=2.2
+opencv-python>=4.8
+numpy<2
